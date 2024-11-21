@@ -18,9 +18,9 @@ export default defineConfig({
     outDir: "dist",
     rollupOptions: {
       input: {
-        background: resolve(__dirname, "src/background/background.ts"),
-        worker: resolve(__dirname, "src/background/worker.ts"),
-        content: resolve(__dirname, "src/content/content.ts"),
+        background: resolve(__dirname, "src/background.ts"),
+        content: resolve(__dirname, "src/content.ts"),
+        offscreen: resolve(__dirname, "src/offscreen.ts"),
         popup: resolve(__dirname, "src/popup/index.html"),
       },
       output: {
@@ -29,8 +29,5 @@ export default defineConfig({
         assetFileNames: "assets/[name].[ext]",
       },
     },
-  },
-  worker: {
-    format: "es",
   },
 })

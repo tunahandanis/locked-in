@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "Locked In",
   "version": "1.0.0",
+  "minimum_chrome_version": "131",
   "description": "Stay laser-focused on what's important",
   "action": {
     "default_popup": "src/popup/index.html",
@@ -10,14 +11,15 @@
       "32": "icons/icon32.png"
     }
   },
-  "permissions": ["scripting", "activeTab", "tabs", "notifications"],
+  "permissions": ["scripting", "activeTab", "tabs", "notifications", "offscreen"],
   "background": {
     "service_worker": "background.js"
   },
-  "content_scripts": [
+  "host_permissions": ["*://*/*"],
+  "web_accessible_resources": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "resources": ["offscreen.html", "offscreen.js"],
+      "matches": ["*://*/*"]
     }
   ]
 }

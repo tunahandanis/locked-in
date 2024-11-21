@@ -8,12 +8,12 @@ const Popup = () => {
 
   const handleStart = () => {
     setTracking(true)
-    chrome.runtime.sendMessage({ action: "START_TRACKING", goal })
+    chrome.runtime.sendMessage({ action: "INITIATE_TRACKING", goal })
   }
 
   const handleStop = () => {
     setTracking(false)
-    chrome.runtime.sendMessage({ action: "STOP_TRACKING" })
+    chrome.runtime.sendMessage({ action: "TERMINATE_TRACKING" })
   }
 
   return (
