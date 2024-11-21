@@ -1,0 +1,35 @@
+{
+  "env": {
+    "browser": true,
+    "webextensions": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": 13,
+    "sourceType": "module"
+  },
+  "plugins": ["preact", "@typescript-eslint", "prettier"],
+  "rules": {
+    "@typescript-eslint/no-unused-vars": ["warn"],
+    "no-console": "off",
+    "prettier/prettier": "error"
+  },
+  "settings": {
+    "react": {
+      "pragma": "h"
+    },
+    "import/resolver": {
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+      }
+    }
+  }
+}
