@@ -61,32 +61,56 @@
 
   function extractVisibleText(): string {
     let textContent = ""
+
     const walker = document.createTreeWalker(
       document.body,
-      NodeFilter.SHOW_TEXT,
+      NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
       {
-        acceptNode: (node) => {
-          if (
-            node.parentElement &&
-            isElementInViewport(node.parentElement) &&
-            node.textContent &&
-            node.textContent.trim() !== ""
-          ) {
-            return NodeFilter.FILTER_ACCEPT
+        acceptNode: function (node) {
+          if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.textContent?.trim()
+            if (text && isTextNodeInViewport(node as Text)) {
+              return NodeFilter.FILTER_ACCEPT
+            } else {
+              return NodeFilter.FILTER_REJECT
+            }
           }
-          return NodeFilter.FILTER_REJECT
+
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const element = node as Element
+            if (isElementVisible(element)) {
+              return NodeFilter.FILTER_ACCEPT
+            } else {
+              return NodeFilter.FILTER_REJECT
+            }
+          }
+
+          return NodeFilter.FILTER_SKIP
         },
       },
     )
+
     let node
     while ((node = walker.nextNode())) {
-      textContent += " " + (node.textContent?.trim() || "")
+      if (node.nodeType === Node.TEXT_NODE) {
+        textContent += " " + (node.textContent?.trim() ?? "")
+      }
     }
+
     return textContent
   }
 
-  function isElementInViewport(el: Element): boolean {
-    const rect = el.getBoundingClientRect()
+  function isElementVisible(element: Element): boolean {
+    const style = window.getComputedStyle(element)
+    if (
+      style.display === "none" ||
+      style.visibility !== "visible" ||
+      style.opacity === "0"
+    ) {
+      return false
+    }
+
+    const rect = element.getBoundingClientRect()
     return (
       rect.bottom >= 0 &&
       rect.right >= 0 &&
@@ -94,5 +118,26 @@
         (window.innerHeight || document.documentElement.clientHeight) &&
       rect.left <= (window.innerWidth || document.documentElement.clientWidth)
     )
+  }
+
+  function isTextNodeInViewport(textNode: Text): boolean {
+    const range = document.createRange()
+    range.selectNodeContents(textNode)
+    const rects = range.getClientRects()
+    // No need to call range.detach() in modern browsers
+
+    for (let i = 0; i < rects.length; i++) {
+      const rect = rects[i]
+      if (
+        rect.bottom >= 0 &&
+        rect.right >= 0 &&
+        rect.top <=
+          (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.left <= (window.innerWidth || document.documentElement.clientWidth)
+      ) {
+        return true
+      }
+    }
+    return false
   }
 })()
