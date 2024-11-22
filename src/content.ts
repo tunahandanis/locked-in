@@ -1,11 +1,10 @@
-// content.ts
 ;(function () {
-  let isContentScriptTracking = true
+  let isContentScriptTracking = false
   let scanIntervalId: number | undefined
   let scanTimeoutId: number | undefined
 
   // Listen for messages to start or stop tracking
-  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
     if (message.action === "PING") {
       sendResponse({ status: "alive" })
       return
@@ -30,6 +29,7 @@
   })
 
   function scheduleScans() {
+    console.log(scanIntervalId, scanTimeoutId)
     if (scanIntervalId || scanTimeoutId) {
       console.error("Scanning already scheduled.")
       return
@@ -38,7 +38,6 @@
       sendPageContent()
       scanTimeoutId = undefined
       scanIntervalId = window.setInterval(() => {
-        console.log("Scheduled scan...")
         sendPageContent()
       }, 10000)
     }, 10000)
@@ -69,7 +68,7 @@
         acceptNode: (node) => {
           if (
             node.parentElement &&
-            node.parentElement.offsetParent !== null &&
+            isElementInViewport(node.parentElement) &&
             node.textContent &&
             node.textContent.trim() !== ""
           ) {
@@ -86,8 +85,14 @@
     return textContent
   }
 
-  // Start scanning if the document is visible
-  if (document.visibilityState === "visible" && isContentScriptTracking) {
-    scheduleScans()
+  function isElementInViewport(el: Element): boolean {
+    const rect = el.getBoundingClientRect()
+    return (
+      rect.bottom >= 0 &&
+      rect.right >= 0 &&
+      rect.top <=
+        (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.left <= (window.innerWidth || document.documentElement.clientWidth)
+    )
   }
 })()
