@@ -1,18 +1,32 @@
 import { h } from "preact"
-import { useState } from "preact/hooks"
+import { useState, useEffect } from "preact/hooks"
 import "../styles/tailwind.css"
 
 const Popup = () => {
   const [goal, setGoal] = useState("")
   const [tracking, setTracking] = useState(false)
 
+  useEffect(() => {
+    chrome.storage.session.get(["isTracking", "goal"], (result) => {
+      setTracking(result.isTracking || false)
+      setGoal(result.goal || "")
+    })
+  }, [])
+
   const handleStart = () => {
-    setTracking(true)
+    chrome.storage.session.set({ isTracking: true, goal }, () => {
+      setTracking(true)
+    })
+
     chrome.runtime.sendMessage({ action: "INITIATE_TRACKING", goal })
   }
 
   const handleStop = () => {
-    setTracking(false)
+    chrome.storage.session.set({ isTracking: false, goal: "" }, () => {
+      setTracking(false)
+      setGoal("")
+    })
+
     chrome.runtime.sendMessage({ action: "TERMINATE_TRACKING" })
   }
 

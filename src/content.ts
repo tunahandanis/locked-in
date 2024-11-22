@@ -3,7 +3,6 @@
   let scanIntervalId: number | undefined
   let scanTimeoutId: number | undefined
 
-  // Listen for messages to start or stop tracking
   chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
     if (message.action === "PING") {
       sendResponse({ status: "alive" })
@@ -19,7 +18,6 @@
     }
   })
 
-  // Handle visibility changes
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible" && isContentScriptTracking) {
       scheduleScans()
@@ -29,7 +27,6 @@
   })
 
   function scheduleScans() {
-    console.log(scanIntervalId, scanTimeoutId)
     if (scanIntervalId || scanTimeoutId) {
       console.error("Scanning already scheduled.")
       return

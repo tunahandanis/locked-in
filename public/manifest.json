@@ -11,7 +11,7 @@
       "32": "icons/icon32.png"
     }
   },
-  "permissions": ["scripting", "activeTab", "tabs", "notifications", "offscreen"],
+  "permissions": ["scripting", "activeTab", "tabs", "notifications", "offscreen", "storage"],
   "background": {
     "service_worker": "background.js"
   },
