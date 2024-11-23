@@ -23,6 +23,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 })
 
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "trackingTimer") {
+    // Update tracking state in storage
+    chrome.storage.session.set({ isTracking: false, endTime: null, goal: "" })
+
+    // Stop tracking logic
+    stopTracking()
+
+    // Optionally, notify the user
+    chrome.notifications.create({
+      type: "basic",
+      iconUrl: "icons/icon32.png",
+      title: "Pomodoro Timer",
+      message: "Time's up! Tracking has been stopped.",
+    })
+  }
+})
+
 async function startTracking() {
   await createOffscreenDocument()
   chrome.runtime.sendMessage({ action: "SET_GOAL", goal: goalText })
@@ -51,9 +69,10 @@ function handleTabActivated(activeInfo: chrome.tabs.TabActiveInfo) {
 
 function injectContentScript(tabId: number) {
   chrome.tabs.sendMessage(tabId, { action: "PING" }, (response) => {
-    // No existing content script, proceed to inject it
     if (chrome.runtime.lastError) {
       handleContentScriptInjection(tabId)
+    } else if (response.status === "alive" && !response.isRunning) {
+      chrome.tabs.sendMessage(tabId, { action: "START_TAB_TRACKING" })
     }
   })
 }

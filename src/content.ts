@@ -3,30 +3,50 @@
   let scanIntervalId: number | undefined
   let scanTimeoutId: number | undefined
 
+  // Reference to the visibilitychange event handler
+  let visibilityChangeHandler: (() => void) | null = null
+
   chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
     if (message.action === "PING") {
-      sendResponse({ status: "alive" })
+      sendResponse({ status: "alive", isRunning: isContentScriptTracking })
       return
     }
 
     if (message.action === "PAUSE_TAB_TRACKING") {
       isContentScriptTracking = false
       clearScheduledScans()
+
+      // Remove the visibilitychange event listener
+      if (visibilityChangeHandler) {
+        document.removeEventListener(
+          "visibilitychange",
+          visibilityChangeHandler,
+        )
+        visibilityChangeHandler = null
+      }
     } else if (message.action === "START_TAB_TRACKING") {
       isContentScriptTracking = true
       scheduleScans()
-    }
-  })
 
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && isContentScriptTracking) {
-      scheduleScans()
-    } else {
-      clearScheduledScans()
+      // Add the visibilitychange event listener if not already added
+      if (!visibilityChangeHandler) {
+        visibilityChangeHandler = () => {
+          if (
+            document.visibilityState === "visible" &&
+            isContentScriptTracking
+          ) {
+            scheduleScans()
+          } else {
+            clearScheduledScans()
+          }
+        }
+        document.addEventListener("visibilitychange", visibilityChangeHandler)
+      }
     }
   })
 
   function scheduleScans() {
+    console.log("SCHEDULED")
     if (scanIntervalId || scanTimeoutId) {
       console.error("Scanning already scheduled.")
       return
@@ -41,6 +61,7 @@
   }
 
   function clearScheduledScans() {
+    console.log("CLEARED")
     if (scanTimeoutId) {
       window.clearTimeout(scanTimeoutId)
       scanTimeoutId = undefined
