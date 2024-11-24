@@ -31,7 +31,6 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     // Stop tracking logic
     stopTracking()
 
-    // Optionally, notify the user
     chrome.notifications.create({
       type: "basic",
       iconUrl: "icons/icon32.png",
@@ -45,7 +44,7 @@ async function startTracking() {
   await createOffscreenDocument()
   chrome.runtime.sendMessage({ action: "SET_GOAL", goal: goalText })
   injectContentScriptIntoActiveTab()
-  chrome.tabs.onActivated.addListener(handleTabActivated)
+  chrome.tabs.onUpdated.addListener(handleTabUpdated)
 }
 
 function stopTracking() {
@@ -58,12 +57,21 @@ function stopTracking() {
     })
   })
   closeOffscreenDocument()
-  chrome.tabs.onActivated.removeListener(handleTabActivated)
+
+  chrome.tabs.onUpdated.removeListener(handleTabUpdated)
 }
 
-function handleTabActivated(activeInfo: chrome.tabs.TabActiveInfo) {
-  if (isBackgroundScriptTracking) {
-    injectContentScript(activeInfo.tabId)
+function handleTabUpdated(
+  tabId: number,
+  changeInfo: chrome.tabs.TabChangeInfo,
+  tab: chrome.tabs.Tab,
+) {
+  if (
+    isBackgroundScriptTracking &&
+    changeInfo.status === "complete" &&
+    isValidUrl(tab.url)
+  ) {
+    injectContentScript(tabId)
   }
 }
 
@@ -80,7 +88,9 @@ function injectContentScript(tabId: number) {
 function handleContentScriptInjection(tabId: number) {
   chrome.tabs.get(tabId, (tab) => {
     if (chrome.runtime.lastError) {
-      console.error(chrome.runtime.lastError.message)
+      console.error(
+        `Error getting tab ${tabId}: ${chrome.runtime.lastError.message}`,
+      )
       return
     }
     if (tab && isValidUrl(tab.url)) {
@@ -91,9 +101,15 @@ function handleContentScriptInjection(tabId: number) {
         },
         () => {
           if (chrome.runtime.lastError) {
-            console.error(chrome.runtime.lastError.message)
+            console.error(
+              `Error injecting content script into tab ${tabId}: ${chrome.runtime.lastError.message}`,
+            )
           } else {
+            // Start tracking after successful injection
             chrome.tabs.sendMessage(tabId, { action: "START_TAB_TRACKING" })
+            console.log(
+              `Content script injected and tracking started on tab ${tabId}`,
+            )
           }
         },
       )
@@ -128,6 +144,7 @@ async function createOffscreenDocument() {
       reasons: [chrome.offscreen.Reason.DOM_PARSER],
       justification: "Need to perform background computations on page content.",
     })
+    console.log("Offscreen document created.")
   }
 }
 
@@ -135,5 +152,6 @@ async function closeOffscreenDocument() {
   const exists = await chrome.offscreen.hasDocument()
   if (exists) {
     await chrome.offscreen.closeDocument()
+    console.log("Offscreen document closed.")
   }
 }
