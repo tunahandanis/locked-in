@@ -10,7 +10,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["chrome"],
+    "types": ["chrome", "dom-chromium-ai"],
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "noEmit": true,

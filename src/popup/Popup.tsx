@@ -15,7 +15,6 @@ const Popup = () => {
   const nextTickRef = useRef<number>(0)
 
   useEffect(() => {
-    // Read from chrome.storage.session when the component mounts
     chrome.storage.session.get(["isTracking", "endTime", "goal"], (result) => {
       setTracking(result.isTracking || false)
       setEndTime(result.endTime || null)
