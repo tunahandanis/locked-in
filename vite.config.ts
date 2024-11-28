@@ -14,6 +14,9 @@ export default defineConfig({
       failOnWarning: false,
     }),
   ],
+  css: {
+    postcss: "./postcss.config.js",
+  },
   build: {
     outDir: "dist",
     rollupOptions: {

@@ -1,9 +1,13 @@
+import { SIMILARITY_THRESHOLDS, TRACKING_MODES } from "./constants"
+
 let isBackgroundScriptTracking = false
 let goalText = ""
+let trackingMode = TRACKING_MODES.BROAD
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message) => {
   if (message.action === "INITIATE_TRACKING") {
     goalText = message.goal
+    trackingMode = message.mode || TRACKING_MODES.BROAD
     isBackgroundScriptTracking = true
     startTracking()
   } else if (message.action === "TERMINATE_TRACKING") {
@@ -11,38 +15,57 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     stopTracking()
   } else if (message.action === "ANALYSIS_RESULT") {
     const { similarity } = message.payload
-    if (similarity !== null && similarity < 0.5) {
+    const threshold = SIMILARITY_THRESHOLDS[trackingMode]
+    if (similarity !== null && similarity < threshold) {
       chrome.notifications.create("", {
         type: "basic",
         iconUrl: "icons/icon32.png",
-        title: "Stay Focused!",
+        title: "⚠️ Stay Focused!",
         message: "The content you are viewing may not align with your goal.",
         priority: 2,
+        buttons: [{ title: "Get Back on Track" }],
       })
     }
   }
 })
 
+chrome.notifications.onButtonClicked.addListener(
+  (notificationId, buttonIndex) => {
+    if (buttonIndex === 0) {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]?.id) {
+          chrome.tabs.update(tabs[0].id, { url: "chrome://newtab" })
+        }
+      })
+    }
+    chrome.notifications.clear(notificationId)
+  },
+)
+
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "trackingTimer") {
-    // Update tracking state in storage
     chrome.storage.session.set({ isTracking: false, endTime: null, goal: "" })
 
-    // Stop tracking logic
     stopTracking()
 
-    chrome.notifications.create({
+    chrome.notifications.create("", {
       type: "basic",
       iconUrl: "icons/icon32.png",
-      title: "Pomodoro Timer",
-      message: "Time's up! Tracking has been stopped.",
+      title: "⏰ Time's Up!",
+      message: "Great job! Your tracking session has ended.",
+      priority: 2,
     })
   }
 })
 
 async function startTracking() {
   await createOffscreenDocument()
-  chrome.runtime.sendMessage({ action: "SET_GOAL", goal: goalText })
+  // Include trackingMode in the message
+  chrome.runtime.sendMessage({
+    action: "SET_GOAL",
+    goal: goalText,
+    mode: trackingMode,
+  })
   injectContentScriptIntoActiveTab()
   chrome.tabs.onUpdated.addListener(handleTabUpdated)
 }

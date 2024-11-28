@@ -13,7 +13,8 @@
   },
   "permissions": ["scripting", "activeTab", "tabs", "notifications", "offscreen", "storage", "alarms"],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+     "type": "module"
   },
   "host_permissions": ["*://*/*"],
   "web_accessible_resources": [
