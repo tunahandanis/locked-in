@@ -11,15 +11,28 @@
       "32": "icons/icon32.png"
     }
   },
-  "permissions": ["scripting", "activeTab", "tabs", "notifications", "offscreen", "storage", "alarms"],
+  "permissions": [
+    "scripting",
+    "activeTab",
+    "tabs",
+    "notifications",
+    "offscreen",
+    "storage",
+    "alarms"
+  ],
   "background": {
     "service_worker": "background.js",
-     "type": "module"
+    "type": "module"
   },
   "host_permissions": ["*://*/*"],
   "web_accessible_resources": [
     {
-      "resources": ["offscreen.html", "offscreen.js", "src/guide/index.html"],
+      "resources": [
+        "offscreen.html",
+        "offscreen.js",
+        "src/guide/index.html",
+        "src/stats/index.html"
+      ],
       "matches": ["*://*/*"]
     }
   ]

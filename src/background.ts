@@ -1,4 +1,6 @@
+// background.ts
 import { SIMILARITY_THRESHOLDS, TRACKING_MODES } from "./constants"
+import { SessionDataType } from "./types"
 
 let isBackgroundScriptTracking = false
 let goalText = ""
@@ -17,6 +19,11 @@ chrome.runtime.onMessage.addListener((message) => {
     const { similarity } = message.payload
     const threshold = SIMILARITY_THRESHOLDS[trackingMode]
     if (similarity !== null && similarity < threshold) {
+      // Increment distraction count
+      updateCurrentSession((session) => {
+        session.distractions += 1
+      })
+
       chrome.notifications.create("", {
         type: "basic",
         iconUrl: "icons/icon32.png",
@@ -46,6 +53,8 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "trackingTimer") {
     chrome.storage.session.set({ isTracking: false, endTime: null, goal: "" })
 
+    // Stop tracking logic
+    isBackgroundScriptTracking = false
     stopTracking()
 
     chrome.notifications.create("", {
@@ -60,7 +69,6 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
 async function startTracking() {
   await createOffscreenDocument()
-  // Include trackingMode in the message
   chrome.runtime.sendMessage({
     action: "SET_GOAL",
     goal: goalText,
@@ -68,6 +76,14 @@ async function startTracking() {
   })
   injectContentScriptIntoActiveTab()
   chrome.tabs.onUpdated.addListener(handleTabUpdated)
+
+  // Initialize current session and store it in chrome.storage.session
+  const session: SessionDataType = {
+    startTime: Date.now(),
+    endTime: 0, // will set when session ends
+    distractions: 0,
+  }
+  chrome.storage.session.set({ currentSession: session })
 }
 
 function stopTracking() {
@@ -80,8 +96,18 @@ function stopTracking() {
     })
   })
   closeOffscreenDocument()
-
   chrome.tabs.onUpdated.removeListener(handleTabUpdated)
+
+  // Finalize current session
+  chrome.storage.session.get("currentSession", (result) => {
+    const session: SessionDataType = result.currentSession
+    if (session) {
+      session.endTime = Date.now()
+      saveSessionData(session)
+      // Remove currentSession from storage
+      chrome.storage.session.remove("currentSession")
+    }
+  })
 }
 
 function handleTabUpdated(
@@ -128,7 +154,6 @@ function handleContentScriptInjection(tabId: number) {
               `Error injecting content script into tab ${tabId}: ${chrome.runtime.lastError.message}`,
             )
           } else {
-            // Start tracking after successful injection
             chrome.tabs.sendMessage(tabId, { action: "START_TAB_TRACKING" })
             console.log(
               `Content script injected and tracking started on tab ${tabId}`,
@@ -177,4 +202,31 @@ async function closeOffscreenDocument() {
     await chrome.offscreen.closeDocument()
     console.log("Offscreen document closed.")
   }
+}
+
+function saveSessionData(session: SessionDataType) {
+  const sessionDurationMs = session.endTime - session.startTime
+
+  chrome.storage.local.get(["sessions"], (result) => {
+    const sessions: SessionDataType[] = result.sessions || []
+    sessions.push({
+      startTime: session.startTime,
+      endTime: session.endTime,
+      distractions: session.distractions,
+      durationMs: sessionDurationMs,
+    })
+    chrome.storage.local.set({ sessions: sessions }, () => {
+      console.log("Session data saved.")
+    })
+  })
+}
+
+function updateCurrentSession(updater: (session: SessionDataType) => void) {
+  chrome.storage.session.get("currentSession", (result) => {
+    const session: SessionDataType = result.currentSession
+    if (session) {
+      updater(session)
+      chrome.storage.session.set({ currentSession: session })
+    }
+  })
 }

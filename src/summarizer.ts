@@ -14,13 +14,13 @@ class Summarizer {
 
   private async init() {
     try {
-      const capabilities = await window.ai.summarizer.capabilities()
+      const capabilities = await self.ai.summarizer.capabilities()
       if (capabilities.available === "no") {
         console.error("Summarizer API is not available.")
         return
       }
 
-      this.summarizer = await window.ai.summarizer.create({
+      this.summarizer = await self.ai.summarizer.create({
         ...this.options,
         monitor: (monitor) => {
           monitor.addEventListener("downloadprogress", (e: Event) => {

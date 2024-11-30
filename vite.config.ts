@@ -27,6 +27,7 @@ export default defineConfig({
         popup: resolve(__dirname, "src/popup/index.html"),
         summarizer: resolve(__dirname, "src/summarizer.ts"),
         guide: resolve(__dirname, "src/guide/index.html"),
+        stats: resolve(__dirname, "src/stats/index.html"),
       },
       output: {
         entryFileNames: "[name].js",

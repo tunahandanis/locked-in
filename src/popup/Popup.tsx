@@ -6,6 +6,7 @@ import {
   ClipboardListIcon,
   ClockIcon,
   InformationCircleIcon,
+  ChartBarIcon,
 } from "@heroicons/react/solid"
 import { TRACKING_MODES } from "../constants"
 
@@ -128,13 +129,22 @@ const Popup = () => {
     chrome.tabs.create({ url: chrome.runtime.getURL("src/guide/index.html") })
   }
 
+  const handleOpenStats = () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL("src/stats/index.html") })
+  }
+
   return (
     <div className="p-4 w-72 bg-white text-black rounded-lg shadow-lg font-sans">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-center">Locked In</h1>
-        <button onClick={handleOpenGuide} className="focus:outline-none">
-          <InformationCircleIcon className="h-6 w-6 text-blue-800 mr-2" />
-        </button>
+        <div className="flex space-x-2">
+          <button onClick={handleOpenStats} className="focus:outline-none">
+            <ChartBarIcon className="h-6 w-6 text-blue-800" />
+          </button>
+          <button onClick={handleOpenGuide} className="focus:outline-none">
+            <InformationCircleIcon className="h-6 w-6 text-blue-800" />
+          </button>
+        </div>
       </div>
       {!tracking ? (
         <div>
