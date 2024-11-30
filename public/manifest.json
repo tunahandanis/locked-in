@@ -19,7 +19,7 @@
   "host_permissions": ["*://*/*"],
   "web_accessible_resources": [
     {
-      "resources": ["offscreen.html", "offscreen.js"],
+      "resources": ["offscreen.html", "offscreen.js", "src/guide/index.html"],
       "matches": ["*://*/*"]
     }
   ]

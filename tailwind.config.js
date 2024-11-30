@@ -14,6 +14,9 @@ export default {
         pink: {
           500: "#EC4899",
         },
+        blue: {
+          800: "#1e3a8a",
+        },
         fontFamily: {
           sans: ["Roboto", "sans-serif"],
         },

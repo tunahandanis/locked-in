@@ -26,6 +26,7 @@ export default defineConfig({
         offscreen: resolve(__dirname, "src/offscreen.ts"),
         popup: resolve(__dirname, "src/popup/index.html"),
         summarizer: resolve(__dirname, "src/summarizer.ts"),
+        guide: resolve(__dirname, "src/guide/index.html"),
       },
       output: {
         entryFileNames: "[name].js",
