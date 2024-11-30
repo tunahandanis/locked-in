@@ -1,8 +1,14 @@
+import TokenCounter from "./TokenCounter" // Ensure this is the correct path
+import { splitText } from "./utils"
+
 class Summarizer {
   private summarizer: AISummarizer | null = null
-  private waiting: boolean = false
+  private tokenCounter: TokenCounter | null = null
+  private MAX_TOKENS: number = 800 // Adjust based on actual limit
+  private options: AISummarizerCreateOptions
 
-  constructor(private options: AISummarizerCreateOptions) {
+  constructor(options: AISummarizerCreateOptions) {
+    this.options = options
     this.init()
   }
 
@@ -26,40 +32,68 @@ class Summarizer {
         },
       })
 
-      if (capabilities.available === "after-download") {
-        console.log(
-          "Summarizer is downloading the model. Progress is being logged.",
-        )
-      } else {
-        console.log("Summarizer initialized and ready.")
-      }
+      this.tokenCounter = await TokenCounter.create()
+
+      console.log("Summarizer initialized and ready.")
     } catch (error) {
       console.error("Error initializing Summarizer:", error)
     }
   }
 
-  async summarize(
-    text: string,
-    additionalContext?: string,
-  ): Promise<string | null> {
-    if (this.waiting || !this.summarizer) {
-      console.warn("Summarizer is busy or not initialized.")
+  private async summarizeText(text: string): Promise<string | null> {
+    if (!this.summarizer) {
+      console.warn("Summarizer is not initialized.")
       return null
     }
 
-    this.waiting = true
     try {
-      const options: AISummarizerSummarizeOptions = {}
-      if (additionalContext) {
-        options.context = additionalContext
-      }
-      const summary = await this.summarizer.summarize(text, options)
+      const summary = await this.summarizer.summarize(text)
       return summary
     } catch (error) {
       console.error("Error during summarization:", error)
       return null
-    } finally {
-      this.waiting = false
+    }
+  }
+
+  async recursiveSummarize(text: string): Promise<string | null> {
+    const MAX_CHUNK_SIZE = 3000 // Adjust as needed
+    const CHUNK_OVERLAP = 200 // Adjust as needed
+
+    const splits = splitText(text, MAX_CHUNK_SIZE, CHUNK_OVERLAP)
+
+    const summaries: string[] = []
+    let currentSummaryBatch: string[] = []
+
+    for (let i = 0; i < splits.length; i++) {
+      const chunk = splits[i].trim()
+      const summarizedPart = await this.summarizeText(chunk)
+      if (!summarizedPart) continue
+
+      currentSummaryBatch.push(summarizedPart)
+
+      const combinedSummary = currentSummaryBatch.join("\n")
+      const tokenCount = await this.tokenCounter!.countTokens(combinedSummary)
+
+      if (tokenCount > this.MAX_TOKENS) {
+        // Exceeds token limit, push current batch and start new
+        currentSummaryBatch.pop() // Remove last to include it in the next batch
+        summaries.push(currentSummaryBatch.join("\n"))
+        currentSummaryBatch = [summarizedPart]
+      }
+    }
+
+    // Push any remaining summaries
+    if (currentSummaryBatch.length > 0) {
+      summaries.push(currentSummaryBatch.join("\n"))
+    }
+
+    if (summaries.length === 1) {
+      // Base case: only one summary, return it
+      return summaries[0]
+    } else {
+      // Recursive case: summarize the summaries
+      const combinedSummaries = summaries.join("\n")
+      return this.recursiveSummarize(combinedSummaries)
     }
   }
 

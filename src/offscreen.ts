@@ -1,15 +1,12 @@
 import * as tf from "@tensorflow/tfjs"
 import * as use from "@tensorflow-models/universal-sentence-encoder"
-import Summarizer from "./summarizer"
 import DOMPurify from "dompurify"
+import Summarizer from "./Summarizer"
 
 let summarizer: Summarizer | null = null
 let useModel: use.UniversalSentenceEncoder | null = null
 let goalText = ""
 
-/**
- * Initializes TensorFlow.js and loads the Universal Sentence Encoder model.
- */
 async function initialize() {
   try {
     await tf.setBackend("cpu")
@@ -80,7 +77,7 @@ async function analyzeContent(content: string) {
 async function summarizeContent(content: string): Promise<string | null> {
   const sanitizedContent = sanitizeText(content)
 
-  return (await summarizer?.summarize(sanitizedContent)) || null
+  return (await summarizer?.recursiveSummarize(sanitizedContent)) || null
 }
 
 function sanitizeText(text: string): string {
