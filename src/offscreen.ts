@@ -1,7 +1,7 @@
 import * as tf from "@tensorflow/tfjs"
 import * as use from "@tensorflow-models/universal-sentence-encoder"
 import DOMPurify from "dompurify"
-import Summarizer from "./Summarizer"
+import Summarizer from "./summarizer"
 
 let summarizer: Summarizer | null = null
 let useModel: use.UniversalSentenceEncoder | null = null
