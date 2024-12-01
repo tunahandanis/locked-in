@@ -26,7 +26,7 @@ chrome.runtime.onMessage.addListener((message) => {
 
       chrome.notifications.create("", {
         type: "basic",
-        iconUrl: "icons/icon32.png",
+        iconUrl: "icons/icon48.png",
         title: "⚠️ Stay Focused!",
         message: "The content you are viewing may not align with your goal.",
         priority: 2,
@@ -59,7 +59,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
     chrome.notifications.create("", {
       type: "basic",
-      iconUrl: "icons/icon32.png",
+      iconUrl: "icons/icon48.png",
       title: "⏰ Time's Up!",
       message: "Great job! Your tracking session has ended.",
       priority: 2,
