@@ -1,3 +1,4 @@
+// Summarizer.ts
 import TokenCounter from "./TokenCounter" // Ensure this is the correct path
 import { splitText } from "./utils"
 
@@ -6,6 +7,7 @@ class Summarizer {
   private tokenCounter: TokenCounter | null = null
   private MAX_TOKENS: number = 800 // Adjust based on actual limit
   private options: AISummarizerCreateOptions
+  private isSummarizing: boolean = false // Flag to indicate if summarization is in progress
 
   constructor(options: AISummarizerCreateOptions) {
     this.options = options
@@ -48,7 +50,13 @@ class Summarizer {
 
     try {
       const summary = await this.summarizer.summarize(text)
-      return summary
+      // Ensure the summary is not empty
+      if (summary && summary.trim() !== "") {
+        return summary
+      } else {
+        console.warn("Summarizer returned an empty summary.")
+        return null
+      }
     } catch (error) {
       console.error("Error during summarization:", error)
       return null
@@ -56,44 +64,59 @@ class Summarizer {
   }
 
   async recursiveSummarize(text: string): Promise<string | null> {
-    const MAX_CHUNK_SIZE = 3000 // Adjust as needed
-    const CHUNK_OVERLAP = 200 // Adjust as needed
+    if (this.isSummarizing) {
+      console.warn("Summarization in progress. New request ignored.")
+      return null
+    }
 
-    const splits = splitText(text, MAX_CHUNK_SIZE, CHUNK_OVERLAP)
+    this.isSummarizing = true
 
-    const summaries: string[] = []
-    let currentSummaryBatch: string[] = []
+    try {
+      const MAX_CHUNK_SIZE = 3000 // Adjust as needed
+      const CHUNK_OVERLAP = 200 // Adjust as needed
 
-    for (let i = 0; i < splits.length; i++) {
-      const chunk = splits[i].trim()
-      const summarizedPart = await this.summarizeText(chunk)
-      if (!summarizedPart) continue
+      const splits = splitText(text, MAX_CHUNK_SIZE, CHUNK_OVERLAP)
 
-      currentSummaryBatch.push(summarizedPart)
+      const summaries: string[] = []
+      let currentSummaryBatch: string[] = []
 
-      const combinedSummary = currentSummaryBatch.join("\n")
-      const tokenCount = await this.tokenCounter!.countTokens(combinedSummary)
+      for (let i = 0; i < splits.length; i++) {
+        const chunk = splits[i].trim()
+        const summarizedPart = await this.summarizeText(chunk)
+        if (!summarizedPart) continue
 
-      if (tokenCount > this.MAX_TOKENS) {
-        // Exceeds token limit, push current batch and start new
-        currentSummaryBatch.pop() // Remove last to include it in the next batch
-        summaries.push(currentSummaryBatch.join("\n"))
-        currentSummaryBatch = [summarizedPart]
+        currentSummaryBatch.push(summarizedPart)
+
+        const combinedSummary = currentSummaryBatch.join("\n")
+        const tokenCount = await this.tokenCounter!.countTokens(combinedSummary)
+
+        if (tokenCount > this.MAX_TOKENS) {
+          currentSummaryBatch.pop() // Remove last to include it in the next batch
+          summaries.push(currentSummaryBatch.join("\n"))
+          currentSummaryBatch = [summarizedPart]
+        }
       }
-    }
 
-    // Push any remaining summaries
-    if (currentSummaryBatch.length > 0) {
-      summaries.push(currentSummaryBatch.join("\n"))
-    }
+      // Push any remaining summaries
+      if (currentSummaryBatch.length > 0) {
+        summaries.push(currentSummaryBatch.join("\n"))
+      }
 
-    if (summaries.length === 1) {
-      // Base case: only one summary, return it
-      return summaries[0]
-    } else {
-      // Recursive case: summarize the summaries
-      const combinedSummaries = summaries.join("\n")
-      return this.recursiveSummarize(combinedSummaries)
+      if (summaries.length === 1) {
+        // Base case: only one summary, return it
+        return summaries[0]
+      } else if (summaries.length > 1) {
+        // Recursive case: summarize the summaries
+        const combinedSummaries = summaries.join("\n")
+        return this.recursiveSummarize(combinedSummaries)
+      }
+
+      return null
+    } catch (error) {
+      console.error("Error in recursiveSummarize:", error)
+      return null
+    } finally {
+      this.isSummarizing = false
     }
   }
 
