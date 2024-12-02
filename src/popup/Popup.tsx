@@ -156,7 +156,7 @@ const Popup = () => {
               <input
                 type="text"
                 className="w-full p-2 pl-10 rounded-md border border-gray-300 text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., Learn Node.js"
+                placeholder="e.g., Learn web development"
                 value={goal}
                 onChange={(e) => setGoal((e.target as HTMLInputElement).value)}
                 disabled={tracking}
