@@ -52,7 +52,7 @@
       scanTimeoutId = undefined
       scanIntervalId = window.setInterval(() => {
         sendPageContent()
-      }, 10000)
+      }, 15000)
     }, 10000)
   }
 
