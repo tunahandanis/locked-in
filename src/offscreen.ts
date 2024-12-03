@@ -57,11 +57,9 @@ async function initializeSummarizer() {
 }
 
 async function analyzeContent(content: string) {
-  console.log("Raw", content)
   if (useModel && goalText && summarizer) {
     try {
       const summarizationResult = await summarizeContent(content)
-      console.log("Summary", summarizationResult)
       if (!summarizationResult) return
       const result = await analyzeContentInternal(goalText, summarizationResult)
       console.log("Similarity result", result)

@@ -43,7 +43,6 @@
   })
 
   function scheduleScans() {
-    console.log("SCHEDULED")
     if (scanIntervalId || scanTimeoutId) {
       console.error("Scanning already scheduled.")
       return
@@ -58,7 +57,6 @@
   }
 
   function clearScheduledScans() {
-    console.log("CLEARED")
     if (scanTimeoutId) {
       window.clearTimeout(scanTimeoutId)
       scanTimeoutId = undefined
