@@ -3,7 +3,6 @@
   let scanIntervalId: number | undefined
   let scanTimeoutId: number | undefined
 
-  // Reference to the visibilitychange event handler
   let visibilityChangeHandler: (() => void) | null = null
 
   chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
@@ -16,7 +15,6 @@
       isContentScriptTracking = false
       clearScheduledScans()
 
-      // Remove the visibilitychange event listener
       if (visibilityChangeHandler) {
         document.removeEventListener(
           "visibilitychange",
@@ -28,7 +26,6 @@
       isContentScriptTracking = true
       scheduleScans()
 
-      // Add the visibilitychange event listener if not already added
       if (!visibilityChangeHandler) {
         visibilityChangeHandler = () => {
           if (
@@ -142,7 +139,6 @@
     const range = document.createRange()
     range.selectNodeContents(textNode)
     const rects = range.getClientRects()
-    // No need to call range.detach() in modern browsers
 
     for (let i = 0; i < rects.length; i++) {
       const rect = rects[i]

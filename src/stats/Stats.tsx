@@ -28,12 +28,10 @@ const Stats = () => {
       const canvas = chartRef.current
       const ctx = canvas.getContext("2d")
       if (ctx) {
-        // Destroy previous chart instance if it exists
         if (chartInstanceRef.current) {
           chartInstanceRef.current.destroy()
         }
 
-        // Reset canvas size to prevent Chart.js from setting unwanted inline styles
         canvas.width = 0
         canvas.height = 0
 
@@ -90,7 +88,6 @@ const Stats = () => {
       }
     }
 
-    // Cleanup function to destroy chart when component unmounts
     return () => {
       if (chartInstanceRef.current) {
         chartInstanceRef.current.destroy()
@@ -164,7 +161,6 @@ function processSessionData(
   }
 
   sessions.forEach((session) => {
-    // Parse session time in UTC and convert to local time
     const sessionDate = dayjs
       .utc(session.startTime)
       .local()
@@ -179,7 +175,6 @@ function processSessionData(
   const data: (number | null)[] = []
 
   for (let i = 0; i <= daysToSubtract; i++) {
-    // Labels are in local timezone
     const date = startDate.add(i, "day").format("YYYY-MM-DD")
     labels.push(date)
 

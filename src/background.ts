@@ -1,4 +1,3 @@
-// background.ts
 import { SIMILARITY_THRESHOLDS, TRACKING_MODES } from "./constants"
 import { SessionDataType } from "./types"
 
@@ -19,7 +18,6 @@ chrome.runtime.onMessage.addListener((message) => {
     const { similarity } = message.payload
     const threshold = SIMILARITY_THRESHOLDS[trackingMode]
     if (similarity !== null && similarity < threshold) {
-      // Increment distraction count
       updateCurrentSession((session) => {
         session.distractions += 1
       })
@@ -53,7 +51,6 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "trackingTimer") {
     chrome.storage.session.set({ isTracking: false, endTime: null, goal: "" })
 
-    // Stop tracking logic
     isBackgroundScriptTracking = false
     stopTracking()
 
@@ -77,10 +74,9 @@ async function startTracking() {
   injectContentScriptIntoActiveTab()
   chrome.tabs.onUpdated.addListener(handleTabUpdated)
 
-  // Initialize current session and store it in chrome.storage.session
   const session: SessionDataType = {
     startTime: Date.now(),
-    endTime: 0, // will set when session ends
+    endTime: 0,
     distractions: 0,
   }
   chrome.storage.session.set({ currentSession: session })
@@ -98,13 +94,11 @@ function stopTracking() {
   closeOffscreenDocument()
   chrome.tabs.onUpdated.removeListener(handleTabUpdated)
 
-  // Finalize current session
   chrome.storage.session.get("currentSession", (result) => {
     const session: SessionDataType = result.currentSession
     if (session) {
       session.endTime = Date.now()
       saveSessionData(session)
-      // Remove currentSession from storage
       chrome.storage.session.remove("currentSession")
     }
   })

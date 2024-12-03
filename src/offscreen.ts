@@ -68,7 +68,6 @@ async function analyzeContent(content: string) {
 
       chrome.runtime.sendMessage({ action: "ANALYSIS_RESULT", payload: result })
     } catch {
-      // Handle errors if necessary
       console.error("Error during content analysis.")
     }
   }

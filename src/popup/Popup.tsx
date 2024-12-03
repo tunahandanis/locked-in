@@ -12,11 +12,11 @@ import { TRACKING_MODES } from "../constants"
 
 const Popup = () => {
   const [goal, setGoal] = useState("")
-  const [duration, setDuration] = useState(25) // Default duration in minutes
+  const [duration, setDuration] = useState(25)
   const [tracking, setTracking] = useState(false)
   const [endTime, setEndTime] = useState<number | null>(null)
   const [timeRemaining, setTimeRemaining] = useState(0)
-  const [mode, setMode] = useState(TRACKING_MODES.BROAD) // Added mode state
+  const [mode, setMode] = useState(TRACKING_MODES.BROAD)
 
   const timeoutIdRef = useRef<number | null>(null)
   const nextTickRef = useRef<number>(0)
@@ -28,7 +28,7 @@ const Popup = () => {
         setTracking(result.isTracking || false)
         setEndTime(result.endTime || null)
         setGoal(result.goal || "")
-        setMode(result.mode || TRACKING_MODES.BROAD) // Retrieve stored mode
+        setMode(result.mode || TRACKING_MODES.BROAD)
       },
     )
   }, [])
@@ -83,18 +83,15 @@ const Popup = () => {
     setEndTime(newEndTime)
     setTimeRemaining(durationMs)
 
-    // Notify background script to start tracking
     chrome.runtime.sendMessage({ action: "INITIATE_TRACKING", goal, mode })
 
-    // Store in chrome.storage.session
     chrome.storage.session.set({
       isTracking: true,
       endTime: newEndTime,
       goal,
-      mode, // Store the selected mode
+      mode,
     })
 
-    // Create the alarm
     chrome.alarms.create("trackingTimer", { when: newEndTime })
   }
 
@@ -103,16 +100,13 @@ const Popup = () => {
     setEndTime(null)
     setTimeRemaining(0)
 
-    // Clear the alarm
     chrome.alarms.clear("trackingTimer")
 
-    // Update storage
     chrome.storage.session.set({
       isTracking: false,
       endTime: null,
     })
 
-    // Notify background script to stop tracking
     chrome.runtime.sendMessage({ action: "TERMINATE_TRACKING" })
   }
 

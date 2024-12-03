@@ -1,5 +1,3 @@
-// src/guide/Guide.tsx
-
 import { h } from "preact"
 import {
   ClipboardListIcon,

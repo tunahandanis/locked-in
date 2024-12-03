@@ -1,13 +1,12 @@
-// Summarizer.ts
-import TokenCounter from "./TokenCounter" // Ensure this is the correct path
+import TokenCounter from "./tokenCounter"
 import { splitText } from "./utils"
 
 class Summarizer {
   private summarizer: AISummarizer | null = null
   private tokenCounter: TokenCounter | null = null
-  private MAX_TOKENS: number = 800 // Adjust based on actual limit
+  private MAX_TOKENS: number = 800
   private options: AISummarizerCreateOptions
-  private isSummarizing: boolean = false // Flag to indicate if summarization is in progress
+  private isSummarizing: boolean = false
 
   constructor(options: AISummarizerCreateOptions) {
     this.options = options
@@ -50,7 +49,6 @@ class Summarizer {
 
     try {
       const summary = await this.summarizer.summarize(text)
-      // Ensure the summary is not empty
       if (summary && summary.trim() !== "") {
         return summary
       } else {
@@ -72,8 +70,8 @@ class Summarizer {
     this.isSummarizing = true
 
     try {
-      const MAX_CHUNK_SIZE = 3000 // Adjust as needed
-      const CHUNK_OVERLAP = 200 // Adjust as needed
+      const MAX_CHUNK_SIZE = 3000
+      const CHUNK_OVERLAP = 200
 
       const splits = splitText(text, MAX_CHUNK_SIZE, CHUNK_OVERLAP)
 
@@ -91,22 +89,19 @@ class Summarizer {
         const tokenCount = await this.tokenCounter!.countTokens(combinedSummary)
 
         if (tokenCount > this.MAX_TOKENS) {
-          currentSummaryBatch.pop() // Remove last to include it in the next batch
+          currentSummaryBatch.pop()
           summaries.push(currentSummaryBatch.join("\n"))
           currentSummaryBatch = [summarizedPart]
         }
       }
 
-      // Push any remaining summaries
       if (currentSummaryBatch.length > 0) {
         summaries.push(currentSummaryBatch.join("\n"))
       }
 
       if (summaries.length === 1) {
-        // Base case: only one summary, return it
         return summaries[0]
       } else if (summaries.length > 1) {
-        // Recursive case: summarize the summaries
         const combinedSummaries = summaries.join("\n")
         return this.recursiveSummarize(combinedSummaries)
       }
