@@ -61,6 +61,8 @@ class Summarizer {
     }
   }
 
+  // Recursive summarizer is an idea from the "summary of summaries" example:
+  // https://github.com/GoogleChromeLabs/web-ai-demos/tree/main/summary-of-summaries
   async recursiveSummarize(text: string): Promise<string | null> {
     if (this.isSummarizing) {
       console.warn("Summarization in progress. New request ignored.")
